@@ -6,6 +6,7 @@ import {
   UserController,
   FileController,
   ProviderController,
+  AppointmentController,
 } from './app/controllers';
 import { authMiddleware } from './app/middlewares';
 import { multerConfig } from './config';
@@ -22,6 +23,8 @@ routes.use(authMiddleware);
 routes.put('/users', UserController.update);
 
 routes.get('/providers', ProviderController.index);
+
+routes.post('/appointments', AppointmentController.store);
 
 routes.post('/files', upload.single('file'), FileController.store);
 
