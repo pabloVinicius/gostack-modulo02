@@ -13,6 +13,7 @@ import { multerConfig } from './config';
 const routes = new Router();
 const upload = multer(multerConfig);
 
+routes.get('/', (req, res) => res.json({ message: 'API is running' }));
 routes.post('/users', UserController.store);
 routes.post('/sessions', SessionController.store);
 
