@@ -3,6 +3,7 @@ import UserController from './UserController';
 import FileController from './FileController';
 import ProviderController from './ProviderController';
 import AppointmentController from './AppointmentController';
+import ScheduleController from './ScheduleController';
 
 export {
   SessionController,
@@ -10,4 +11,5 @@ export {
   FileController,
   ProviderController,
   AppointmentController,
+  ScheduleController,
 };
