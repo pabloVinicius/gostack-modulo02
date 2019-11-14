@@ -72,6 +72,17 @@ class AppointmentController {
     }
 
     /*
+      Checking if provider_id and userId is same
+    */
+
+    const userIsSameProvider = provider_id === req.userId;
+    if (userIsSameProvider) {
+      return res.status(400).json({
+        error: 'You can not schedule an appointment for yourself.',
+      });
+    }
+
+    /*
       Check date availability
     */
 
