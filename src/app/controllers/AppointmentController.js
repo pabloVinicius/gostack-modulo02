@@ -15,7 +15,7 @@ class AppointmentController {
         canceled_at: null,
       },
       order: ['date'],
-      attributes: ['id', 'date', 'canceled_at'],
+      attributes: ['id', 'date', 'canceled_at', 'past', 'cancelable'],
       limit: perPage,
       offset: page * perPage,
       include: [
