@@ -3,6 +3,7 @@ import pt from 'date-fns/locale/pt';
 import { startOfHour, parseISO, isBefore, format, subHours } from 'date-fns';
 import { Appointment, User, File } from '../models';
 import { Notification } from '../schemas';
+import { Mail } from '../../lib';
 
 class AppointmentController {
   async index(req, res) {
@@ -123,7 +124,15 @@ class AppointmentController {
   }
 
   async delete(req, res) {
-    const appointment = await Appointment.findByPk(req.params.id);
+    const appointment = await Appointment.findByPk(req.params.id, {
+      include: [
+        {
+          model: User,
+          as: 'provider',
+          attributes: ['name', 'email'],
+        },
+      ],
+    });
 
     /*
       Checking if appointment exists
@@ -131,6 +140,15 @@ class AppointmentController {
     if (!appointment) {
       return res.status(404).json({
         error: 'There is no appointment with this id.',
+      });
+    }
+
+    /*
+      Checking if appointment is already canceled
+    */
+    if (appointment.canceled_at !== null) {
+      return res.status(400).json({
+        error: 'Appointment is already canceled.',
       });
     }
 
@@ -157,6 +175,15 @@ class AppointmentController {
     appointment.canceled_at = new Date();
 
     await appointment.save();
+
+    const {
+      provider: { name, email },
+    } = appointment;
+    await Mail.sendMail({
+      to: `${name} <${email}>`,
+      subject: 'Agendamento cancelado',
+      text: 'Você tem um novo cancelamento.',
+    });
 
     return res.json({ appointment });
   }
