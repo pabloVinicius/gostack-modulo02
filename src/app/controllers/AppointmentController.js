@@ -3,7 +3,8 @@ import pt from 'date-fns/locale/pt';
 import { startOfHour, parseISO, isBefore, format, subHours } from 'date-fns';
 import { Appointment, User, File } from '../models';
 import { Notification } from '../schemas';
-import { Mail } from '../../lib';
+import { Queue } from '../../lib';
+import { CancellationMail } from '../jobs';
 
 class AppointmentController {
   async index(req, res) {
@@ -181,22 +182,8 @@ class AppointmentController {
 
     await appointment.save();
 
-    const {
-      provider: { name, email },
-      user: { name: userName },
-      date,
-    } = appointment;
-    await Mail.sendMail({
-      to: `${name} <${email}>`,
-      subject: 'Agendamento cancelado',
-      template: 'cancellation',
-      context: {
-        provider: name,
-        user: userName,
-        date: format(date, "dd 'de' MMM', às' H:mm'h'", {
-          locale: pt,
-        }),
-      },
+    await Queue.add(CancellationMail.key, {
+      appointment,
     });
 
     return res.json({ appointment });
