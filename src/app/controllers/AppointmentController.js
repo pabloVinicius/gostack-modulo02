@@ -1,6 +1,6 @@
 import * as Yup from 'yup';
 import pt from 'date-fns/locale/pt';
-import { startOfHour, parseISO, isBefore, format } from 'date-fns';
+import { startOfHour, parseISO, isBefore, format, subHours } from 'date-fns';
 import { Appointment, User, File } from '../models';
 import { Notification } from '../schemas';
 
@@ -13,7 +13,7 @@ class AppointmentController {
         canceled_at: null,
       },
       order: ['date'],
-      attributes: ['id', 'date'],
+      attributes: ['id', 'date', 'canceled_at'],
       limit: perPage,
       offset: page * perPage,
       include: [
@@ -120,6 +120,45 @@ class AppointmentController {
     });
 
     return res.json(appointment);
+  }
+
+  async delete(req, res) {
+    const appointment = await Appointment.findByPk(req.params.id);
+
+    /*
+      Checking if appointment exists
+    */
+    if (!appointment) {
+      return res.status(404).json({
+        error: 'There is no appointment with this id.',
+      });
+    }
+
+    /*
+      Checking if appointment owner is the requester
+    */
+    if (appointment.user_id !== req.userId) {
+      return res.status(401).json({
+        error: 'You do not have permission to cancel others users appointments',
+      });
+    }
+
+    /*
+      Checking if user is trying to cancel an appointment at least 2 hours before
+    */
+    const subtractedDate = subHours(appointment.date, 2);
+
+    if (isBefore(subtractedDate, new Date())) {
+      return res.status(401).json({
+        error: 'You can only cancel appointments 2 hours in advance.',
+      });
+    }
+
+    appointment.canceled_at = new Date();
+
+    await appointment.save();
+
+    return res.json({ appointment });
   }
 }
 
